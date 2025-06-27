@@ -7,9 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ShoppingCart, Plus, Minus, Trash2, CreditCard } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Order } from '@/types';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 const Cart = () => {
   const { items, updateQuantity, removeFromCart, total, clearCart } = useCart();
@@ -19,13 +21,52 @@ const Cart = () => {
     email: user?.email || '',
     phone: '',
     address: '',
+    city: '',
+    paymentMethod: '',
+  });
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    productId: '',
+    productName: ''
   });
 
+  const paymentMethods = [
+    'Credit Card',
+    'PayPal',
+    'Apple Pay',
+    'Google Pay',
+    'Bank Transfer'
+  ];
+
+  const handleQuantityChange = (productId: string, newQuantity: number) => {
+    if (newQuantity < 1) {
+      return; // Prevent quantity from going below 1
+    }
+    updateQuantity(productId, newQuantity);
+  };
+
+  const handleRemoveClick = (productId: string, productName: string) => {
+    setConfirmDialog({
+      open: true,
+      productId,
+      productName
+    });
+  };
+
+  const confirmRemove = () => {
+    removeFromCart(confirmDialog.productId);
+    setConfirmDialog({ open: false, productId: '', productName: '' });
+    toast({
+      title: "Item removed",
+      description: "The item has been removed from your cart.",
+    });
+  };
+
   const handleCheckout = () => {
-    if (!customerInfo.name || !customerInfo.email || !customerInfo.phone || !customerInfo.address) {
+    if (!customerInfo.name || !customerInfo.email || !customerInfo.phone || !customerInfo.address || !customerInfo.city || !customerInfo.paymentMethod) {
       toast({
         title: "Missing information",
-        description: "Please fill in all customer information fields.",
+        description: "Please fill in all required fields including city and payment method.",
         variant: "destructive",
       });
       return;
@@ -83,7 +124,7 @@ const Cart = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center space-x-4">
                     <img
-                      src={item.product.image}
+                      src={item.product.images[0]}
                       alt={item.product.name}
                       className="w-20 h-20 object-cover rounded-lg"
                     />
@@ -95,7 +136,8 @@ const Cart = () => {
                       <Button
                         variant="outline"
                         size="icon"
-                        onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                        onClick={() => handleQuantityChange(item.productId, item.quantity - 1)}
+                        disabled={item.quantity <= 1}
                       >
                         <Minus className="h-4 w-4" />
                       </Button>
@@ -103,7 +145,7 @@ const Cart = () => {
                       <Button
                         variant="outline"
                         size="icon"
-                        onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                        onClick={() => handleQuantityChange(item.productId, item.quantity + 1)}
                       >
                         <Plus className="h-4 w-4" />
                       </Button>
@@ -115,7 +157,7 @@ const Cart = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => removeFromCart(item.productId)}
+                        onClick={() => handleRemoveClick(item.productId, item.product.name)}
                         className="text-red-600 hover:text-red-700"
                       >
                         <Trash2 className="h-4 w-4 mr-1" />
@@ -159,7 +201,7 @@ const Cart = () => {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Name</Label>
+                    <Label htmlFor="name">Name *</Label>
                     <Input
                       id="name"
                       value={customerInfo.name}
@@ -167,7 +209,7 @@ const Cart = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">Email *</Label>
                     <Input
                       id="email"
                       type="email"
@@ -177,7 +219,7 @@ const Cart = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone</Label>
+                  <Label htmlFor="phone">Phone *</Label>
                   <Input
                     id="phone"
                     type="tel"
@@ -186,12 +228,35 @@ const Cart = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="address">Address</Label>
+                  <Label htmlFor="address">Address *</Label>
                   <Input
                     id="address"
                     value={customerInfo.address}
                     onChange={(e) => setCustomerInfo({ ...customerInfo, address: e.target.value })}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="city">City *</Label>
+                  <Input
+                    id="city"
+                    value={customerInfo.city}
+                    onChange={(e) => setCustomerInfo({ ...customerInfo, city: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="payment">Payment Method *</Label>
+                  <Select value={customerInfo.paymentMethod} onValueChange={(value) => setCustomerInfo({ ...customerInfo, paymentMethod: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select payment method" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white">
+                      {paymentMethods.map((method) => (
+                        <SelectItem key={method} value={method}>
+                          {method}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <Button onClick={handleCheckout} className="w-full" size="lg">
                   <CreditCard className="mr-2 h-5 w-5" />
@@ -201,6 +266,14 @@ const Cart = () => {
             </Card>
           </div>
         </div>
+
+        <ConfirmDialog
+          open={confirmDialog.open}
+          onOpenChange={(open) => setConfirmDialog(prev => ({ ...prev, open }))}
+          title="Remove Item"
+          description={`Are you sure you want to remove "${confirmDialog.productName}" from your cart?`}
+          onConfirm={confirmRemove}
+        />
       </div>
     </div>
   );

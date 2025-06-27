@@ -12,11 +12,9 @@ export interface Product {
   name: string;
   description: string;
   price: number;
-  image: string;
+  images: string[];
   category: string;
   stock: number;
-  rating: number;
-  reviews: number;
 }
 
 export interface CartItem {
@@ -37,6 +35,8 @@ export interface Order {
     email: string;
     phone: string;
     address: string;
+    city: string;
+    paymentMethod: string;
   };
 }
 
@@ -48,4 +48,9 @@ export interface ContactMessage {
   message: string;
   createdAt: string;
   status: 'new' | 'read' | 'replied';
+}
+
+export interface Category {
+  id: string;
+  name: string;
 }
