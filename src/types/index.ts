@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   email: string;
@@ -53,4 +52,11 @@ export interface ContactMessage {
 export interface Category {
   id: string;
   name: string;
+}
+
+export interface Ad {
+  id: string;
+  title: string;
+  image: string;
+  productId: string;
 }

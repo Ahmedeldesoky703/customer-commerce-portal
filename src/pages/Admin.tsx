@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { products as initialProducts } from '@/data/products';
 import { categories as initialCategories } from '@/data/categories';
-import { Product, Order, ContactMessage, Category } from '@/types';
+import { Product, Order, ContactMessage, Category, Ad } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,7 +27,8 @@ import {
   Package, 
   Users, 
   MessageSquare,
-  TrendingUp 
+  TrendingUp,
+  Image as ImageIcon
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Navigate } from 'react-router-dom';
@@ -36,12 +37,20 @@ const Admin = () => {
   const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [ads, setAds] = useState<Ad[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
+  const [isAddAdOpen, setIsAddAdOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingAd, setEditingAd] = useState<Ad | null>(null);
   const [newCategory, setNewCategory] = useState('');
+  const [newAd, setNewAd] = useState<Omit<Ad, 'id'>>({
+    title: '',
+    image: '',
+    productId: '',
+  });
   const [newProduct, setNewProduct] = useState<Omit<Product, 'id'>>({
     name: '',
     description: '',
@@ -65,6 +74,11 @@ const Admin = () => {
     const savedCategories = localStorage.getItem('categories');
     if (savedCategories) {
       setCategories(JSON.parse(savedCategories));
+    }
+
+    const savedAds = localStorage.getItem('ads');
+    if (savedAds) {
+      setAds(JSON.parse(savedAds));
     }
   }, []);
 
@@ -156,6 +170,68 @@ const Admin = () => {
     });
   };
 
+  const handleAddAd = () => {
+    const ad: Ad = {
+      ...newAd,
+      id: Math.random().toString(36).substr(2, 9),
+    };
+    const updatedAds = [...ads, ad];
+    setAds(updatedAds);
+    localStorage.setItem('ads', JSON.stringify(updatedAds));
+    setNewAd({
+      title: '',
+      image: '',
+      productId: '',
+    });
+    setIsAddAdOpen(false);
+    toast({
+      title: "Ad added",
+      description: "New ad has been added successfully.",
+    });
+  };
+
+  const handleEditAd = (ad: Ad) => {
+    setEditingAd(ad);
+    setNewAd({
+      title: ad.title,
+      image: ad.image,
+      productId: ad.productId,
+    });
+    setIsAddAdOpen(true);
+  };
+
+  const handleUpdateAd = () => {
+    if (!editingAd) return;
+    const updatedAd = {
+      ...newAd,
+      id: editingAd.id,
+    };
+    const updatedAds = ads.map(a => a.id === editingAd.id ? updatedAd : a);
+    setAds(updatedAds);
+    localStorage.setItem('ads', JSON.stringify(updatedAds));
+    setEditingAd(null);
+    setNewAd({
+      title: '',
+      image: '',
+      productId: '',
+    });
+    setIsAddAdOpen(false);
+    toast({
+      title: "Ad updated",
+      description: "Ad has been updated successfully.",
+    });
+  };
+
+  const handleDeleteAd = (id: string) => {
+    const updatedAds = ads.filter(a => a.id !== id);
+    setAds(updatedAds);
+    localStorage.setItem('ads', JSON.stringify(updatedAds));
+    toast({
+      title: "Ad deleted",
+      description: "Ad has been removed successfully.",
+    });
+  };
+
   const updateImageUrl = (index: number, value: string) => {
     const updatedImages = [...newProduct.images];
     updatedImages[index] = value;
@@ -228,8 +304,9 @@ const Admin = () => {
         </div>
 
         <Tabs defaultValue="products" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="products">Products</TabsTrigger>
+            <TabsTrigger value="ads">Ads</TabsTrigger>
             <TabsTrigger value="orders">Orders</TabsTrigger>
             <TabsTrigger value="messages">Messages</TabsTrigger>
           </TabsList>
@@ -406,6 +483,118 @@ const Admin = () => {
                       </div>
                     </div>
                   ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="ads">
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <CardTitle>Ads Management</CardTitle>
+                  <Dialog open={isAddAdOpen} onOpenChange={setIsAddAdOpen}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Ad
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="bg-white max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>
+                          {editingAd ? 'Edit Ad' : 'Add New Ad'}
+                        </DialogTitle>
+                        <DialogDescription>
+                          {editingAd ? 'Update ad information' : 'Create a new ad for the banner'}
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="adTitle">Ad Title</Label>
+                          <Input
+                            id="adTitle"
+                            value={newAd.title}
+                            onChange={(e) => setNewAd({ ...newAd, title: e.target.value })}
+                            placeholder="Enter ad title"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="adImage">Image URL</Label>
+                          <Input
+                            id="adImage"
+                            value={newAd.image}
+                            onChange={(e) => setNewAd({ ...newAd, image: e.target.value })}
+                            placeholder="Enter image URL"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="adProduct">Product</Label>
+                          <Select 
+                            value={newAd.productId} 
+                            onValueChange={(value) => setNewAd({ ...newAd, productId: value })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a product" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {products.map((product) => (
+                                <SelectItem key={product.id} value={product.id}>
+                                  {product.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button 
+                          onClick={editingAd ? handleUpdateAd : handleAddAd}
+                          className="w-full"
+                        >
+                          {editingAd ? 'Update Ad' : 'Add Ad'}
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {ads.map((ad) => (
+                    <div key={ad.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center space-x-4">
+                        <img
+                          src={ad.image}
+                          alt={ad.title}
+                          className="w-16 h-16 object-cover rounded"
+                        />
+                        <div>
+                          <h3 className="font-semibold">{ad.title}</h3>
+                          <p className="text-gray-600">
+                            Product: {products.find(p => p.id === ad.productId)?.name || 'Unknown'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleEditAd(ad)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleDeleteAd(ad.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  {ads.length === 0 && (
+                    <p className="text-gray-500 text-center py-8">No ads created yet</p>
+                  )}
                 </div>
               </CardContent>
             </Card>

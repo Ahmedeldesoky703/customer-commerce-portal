@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Carousel,
@@ -9,15 +9,9 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { Card, CardContent } from "@/components/ui/card";
+import { Ad } from '@/types';
 
-interface AdItem {
-  id: string;
-  image: string;
-  productId: string;
-  title: string;
-}
-
-const adsData: AdItem[] = [
+const defaultAds: Ad[] = [
   {
     id: '1',
     image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&h=400&fit=crop',
@@ -39,11 +33,27 @@ const adsData: AdItem[] = [
 ];
 
 const AdsCarousel: React.FC = () => {
+  const [ads, setAds] = useState<Ad[]>([]);
+
+  useEffect(() => {
+    const savedAds = localStorage.getItem('ads');
+    if (savedAds) {
+      setAds(JSON.parse(savedAds));
+    } else {
+      setAds(defaultAds);
+      localStorage.setItem('ads', JSON.stringify(defaultAds));
+    }
+  }, []);
+
+  if (ads.length === 0) {
+    return null;
+  }
+
   return (
     <div className="w-full mb-8">
       <Carousel className="w-full">
         <CarouselContent>
-          {adsData.map((ad) => (
+          {ads.map((ad) => (
             <CarouselItem key={ad.id}>
               <Link to={`/product/${ad.productId}`}>
                 <Card className="cursor-pointer hover:shadow-lg transition-shadow">
