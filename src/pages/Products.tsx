@@ -1,18 +1,31 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { products } from '@/data/products';
 import ProductCard from '@/components/ProductCard';
 import AdsCarousel from '@/components/AdsCarousel';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Filter } from 'lucide-react';
+import { Category } from '@/types';
 
 const Products = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('name');
+  const [categories, setCategories] = useState<Category[]>([]);
 
-  const categories = ['all', ...Array.from(new Set(products.map(p => p.category)))];
+  useEffect(() => {
+    const savedCategories = localStorage.getItem('categories');
+    if (savedCategories) {
+      setCategories(JSON.parse(savedCategories));
+    } else {
+      // Fallback to default categories from products
+      const defaultCategories = Array.from(new Set(products.map(p => p.category)));
+      setCategories(defaultCategories.map((name, index) => ({ id: (index + 1).toString(), name })));
+    }
+  }, []);
+
+  const allCategories = ['all', ...categories.map(c => c.name)];
 
   const filteredProducts = products
     .filter(product => 
@@ -57,7 +70,7 @@ const Products = () => {
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent className="bg-white">
-                {categories.map(category => (
+                {allCategories.map(category => (
                   <SelectItem key={category} value={category}>
                     {category === 'all' ? 'All Categories' : category}
                   </SelectItem>

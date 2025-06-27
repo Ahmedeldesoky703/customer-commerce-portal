@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { products as initialProducts } from '@/data/products';
-import { categories } from '@/data/categories';
-import { Product, Order, ContactMessage } from '@/types';
+import { categories as initialCategories } from '@/data/categories';
+import { Product, Order, ContactMessage, Category } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,10 +35,13 @@ import { Navigate } from 'react-router-dom';
 const Admin = () => {
   const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [orders, setOrders] = useState<Order[]>([]);
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [newCategory, setNewCategory] = useState('');
   const [newProduct, setNewProduct] = useState<Omit<Product, 'id'>>({
     name: '',
     description: '',
@@ -57,6 +60,11 @@ const Admin = () => {
     const savedMessages = localStorage.getItem('contactMessages');
     if (savedMessages) {
       setMessages(JSON.parse(savedMessages));
+    }
+
+    const savedCategories = localStorage.getItem('categories');
+    if (savedCategories) {
+      setCategories(JSON.parse(savedCategories));
     }
   }, []);
 
@@ -124,6 +132,27 @@ const Admin = () => {
     toast({
       title: "Product deleted",
       description: "Product has been removed successfully.",
+    });
+  };
+
+  const handleAddCategory = () => {
+    if (!newCategory.trim()) return;
+    
+    const category: Category = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: newCategory.trim()
+    };
+    
+    const updatedCategories = [...categories, category];
+    setCategories(updatedCategories);
+    localStorage.setItem('categories', JSON.stringify(updatedCategories));
+    
+    setNewCategory('');
+    setIsAddCategoryOpen(false);
+    
+    toast({
+      title: "Category added",
+      description: "New category has been added successfully.",
     });
   };
 
@@ -266,21 +295,52 @@ const Admin = () => {
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="category">Category</Label>
-                          <Select 
-                            value={newProduct.category} 
-                            onValueChange={(value) => setNewProduct({ ...newProduct, category: value })}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a category" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {categories.map((category) => (
-                                <SelectItem key={category.id} value={category.name}>
-                                  {category.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <div className="flex space-x-2">
+                            <Select 
+                              value={newProduct.category} 
+                              onValueChange={(value) => setNewProduct({ ...newProduct, category: value })}
+                            >
+                              <SelectTrigger className="flex-1">
+                                <SelectValue placeholder="Select a category" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {categories.map((category) => (
+                                  <SelectItem key={category.id} value={category.name}>
+                                    {category.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Dialog open={isAddCategoryOpen} onOpenChange={setIsAddCategoryOpen}>
+                              <DialogTrigger asChild>
+                                <Button variant="outline" size="icon">
+                                  <Plus className="h-4 w-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="bg-white max-w-sm">
+                                <DialogHeader>
+                                  <DialogTitle>Add New Category</DialogTitle>
+                                  <DialogDescription>
+                                    Create a new category for your products
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4">
+                                  <div className="space-y-2">
+                                    <Label htmlFor="categoryName">Category Name</Label>
+                                    <Input
+                                      id="categoryName"
+                                      value={newCategory}
+                                      onChange={(e) => setNewCategory(e.target.value)}
+                                      placeholder="Enter category name"
+                                    />
+                                  </div>
+                                  <Button onClick={handleAddCategory} className="w-full">
+                                    Add Category
+                                  </Button>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                          </div>
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="image1">Image 1 URL</Label>
