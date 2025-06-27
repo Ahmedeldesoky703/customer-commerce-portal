@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Star, ShoppingCart, Plus, Minus, ArrowLeft } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, ArrowLeft } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 
@@ -57,7 +57,7 @@ const ProductDetail = () => {
           <div className="space-y-4">
             <div className="aspect-square overflow-hidden rounded-lg bg-white shadow-lg">
               <img
-                src={product.image}
+                src={product.images[0]}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
@@ -68,13 +68,6 @@ const ProductDetail = () => {
             <div>
               <Badge className="mb-2">{product.category}</Badge>
               <h1 className="text-3xl font-bold text-gray-900 mb-4">{product.name}</h1>
-              <div className="flex items-center gap-4 mb-4">
-                <div className="flex items-center">
-                  <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                  <span className="font-medium ml-1">{product.rating}</span>
-                </div>
-                <span className="text-gray-500">({product.reviews} reviews)</span>
-              </div>
               <p className="text-gray-600 text-lg leading-relaxed">{product.description}</p>
             </div>
 

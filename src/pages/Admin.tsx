@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { products as initialProducts } from '@/data/products';
+import { categories } from '@/data/categories';
 import { Product, Order, ContactMessage } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Dialog, 
   DialogContent, 
@@ -42,11 +43,9 @@ const Admin = () => {
     name: '',
     description: '',
     price: 0,
-    image: '',
+    images: [''],
     category: '',
     stock: 0,
-    rating: 0,
-    reviews: 0,
   });
 
   useEffect(() => {
@@ -69,17 +68,16 @@ const Admin = () => {
     const product: Product = {
       ...newProduct,
       id: Math.random().toString(36).substr(2, 9),
+      images: newProduct.images.filter(img => img.trim() !== ''),
     };
     setProducts([...products, product]);
     setNewProduct({
       name: '',
       description: '',
       price: 0,
-      image: '',
+      images: [''],
       category: '',
       stock: 0,
-      rating: 0,
-      reviews: 0,
     });
     setIsAddProductOpen(false);
     toast({
@@ -90,23 +88,29 @@ const Admin = () => {
 
   const handleEditProduct = (product: Product) => {
     setEditingProduct(product);
-    setNewProduct(product);
+    setNewProduct({
+      ...product,
+      images: [...product.images, ''].slice(0, 2),
+    });
     setIsAddProductOpen(true);
   };
 
   const handleUpdateProduct = () => {
     if (!editingProduct) return;
-    setProducts(products.map(p => p.id === editingProduct.id ? { ...newProduct, id: editingProduct.id } : p));
+    const updatedProduct = {
+      ...newProduct,
+      id: editingProduct.id,
+      images: newProduct.images.filter(img => img.trim() !== ''),
+    };
+    setProducts(products.map(p => p.id === editingProduct.id ? updatedProduct : p));
     setEditingProduct(null);
     setNewProduct({
       name: '',
       description: '',
       price: 0,
-      image: '',
+      images: [''],
       category: '',
       stock: 0,
-      rating: 0,
-      reviews: 0,
     });
     setIsAddProductOpen(false);
     toast({
@@ -121,6 +125,12 @@ const Admin = () => {
       title: "Product deleted",
       description: "Product has been removed successfully.",
     });
+  };
+
+  const updateImageUrl = (index: number, value: string) => {
+    const updatedImages = [...newProduct.images];
+    updatedImages[index] = value;
+    setNewProduct({ ...newProduct, images: updatedImages });
   };
 
   const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
@@ -256,18 +266,38 @@ const Admin = () => {
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="category">Category</Label>
+                          <Select 
+                            value={newProduct.category} 
+                            onValueChange={(value) => setNewProduct({ ...newProduct, category: value })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {categories.map((category) => (
+                                <SelectItem key={category.id} value={category.name}>
+                                  {category.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="image1">Image 1 URL</Label>
                           <Input
-                            id="category"
-                            value={newProduct.category}
-                            onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
+                            id="image1"
+                            value={newProduct.images[0] || ''}
+                            onChange={(e) => updateImageUrl(0, e.target.value)}
+                            placeholder="First image URL"
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="image">Image URL</Label>
+                          <Label htmlFor="image2">Image 2 URL (Optional)</Label>
                           <Input
-                            id="image"
-                            value={newProduct.image}
-                            onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })}
+                            id="image2"
+                            value={newProduct.images[1] || ''}
+                            onChange={(e) => updateImageUrl(1, e.target.value)}
+                            placeholder="Second image URL (optional)"
                           />
                         </div>
                         <Button 
@@ -287,7 +317,7 @@ const Admin = () => {
                     <div key={product.id} className="flex items-center justify-between p-4 border rounded-lg">
                       <div className="flex items-center space-x-4">
                         <img
-                          src={product.image}
+                          src={product.images[0]}
                           alt={product.name}
                           className="w-16 h-16 object-cover rounded"
                         />
