@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -8,8 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { User, Mail, Shield, Settings, Save } from 'lucide-react';
+import { User, Mail, Shield, Settings, Save, ArrowRight, Lock, Eye } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { Link } from 'react-router-dom';
 
 const Profile = () => {
   const { user } = useAuth();
@@ -156,24 +156,26 @@ const Profile = () => {
                           Configure
                         </Button>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-medium">Privacy Settings</h4>
-                          <p className="text-sm text-gray-600">Control your data and privacy</p>
+                      <Link to="/privacy-settings" className="flex items-center justify-between hover:bg-gray-50 p-2 rounded-lg transition-colors">
+                        <div className="flex items-center">
+                          <Eye className="mr-3 h-5 w-5 text-gray-600" />
+                          <div>
+                            <h4 className="font-medium">Privacy Settings</h4>
+                            <p className="text-sm text-gray-600">Control your data and privacy</p>
+                          </div>
                         </div>
-                        <Button variant="outline" size="sm">
-                          Manage
-                        </Button>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-medium">Security</h4>
-                          <p className="text-sm text-gray-600">Password and login settings</p>
+                        <ArrowRight className="h-4 w-4 text-gray-400" />
+                      </Link>
+                      <Link to="/security" className="flex items-center justify-between hover:bg-gray-50 p-2 rounded-lg transition-colors">
+                        <div className="flex items-center">
+                          <Lock className="mr-3 h-5 w-5 text-gray-600" />
+                          <div>
+                            <h4 className="font-medium">Security</h4>
+                            <p className="text-sm text-gray-600">Password and login settings</p>
+                          </div>
                         </div>
-                        <Button variant="outline" size="sm">
-                          Update
-                        </Button>
-                      </div>
+                        <ArrowRight className="h-4 w-4 text-gray-400" />
+                      </Link>
                     </div>
                   </CardContent>
                 </Card>

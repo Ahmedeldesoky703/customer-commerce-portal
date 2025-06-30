@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,6 +11,8 @@ import Login from "@/pages/Login";
 import Products from "@/pages/Products";
 import ProductDetail from "@/pages/ProductDetail";
 import Profile from "@/pages/Profile";
+import PrivacySettings from "@/pages/PrivacySettings";
+import Security from "@/pages/Security";
 import Orders from "@/pages/Orders";
 import Cart from "@/pages/Cart";
 import Admin from "@/pages/Admin";
@@ -43,6 +44,8 @@ const AppContent = () => {
           <Route path="/" element={<Products />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/privacy-settings" element={<PrivacySettings />} />
+          <Route path="/security" element={<Security />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/admin" element={<Admin />} />
